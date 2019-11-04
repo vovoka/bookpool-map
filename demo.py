@@ -2,6 +2,8 @@ import sys
 import random
 from flask import Flask, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from forms import BookSearchForm
+from flask import flash, render_template, request, redirect
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
@@ -56,7 +58,8 @@ class Book(db.Model):
     def __init__(self, title):
         self.title = title
 
-
+    def __repr__(self):
+        return f"< Book name:{self.title} id:{self.id}>"
 
 
 class BookInstance(db.Model):
@@ -97,10 +100,35 @@ def get_book_title_by_id(book_id):
     return 'x'
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     districts = District.query.all()
-    return render_template('index.html', districts=districts)
+    search = BookSearchForm(request.form)
+    if request.method == 'POST':
+        return search_results(search)
+    return render_template('index.html', districts=districts, form=search)
+
+
+@app.route('/results')
+def search_results(search):
+    search_string = search.data['search']
+    
+    if search.data['search'] != '':
+        results = Book.query.filter(Book.title.contains(search_string)).all()
+        for b in results:
+            print(b)
+
+    else:
+        return redirect('/')
+
+    # display results
+    print('*'*80 )
+    print(f'found {len(results)}')
+    print(f'results = {results}')
+    for b in results:
+        print(b)
+
+        return render_template('results.html', results=results)
 
 
 @app.route('/district/<int:district_id>')
@@ -111,9 +139,8 @@ def district(district_id):
     for user in users:
         booklist = []
         users = User.query.filter_by(district_id=district_id).all()
-        # print(user.get_titles())
-        # all_book_titles = user.get_titles()
     coords = [[user.latitude, user.longitude, str(user.get_titles())] for user in users]
+    print('_' * 80)
     return jsonify({"data": coords})
 
 
@@ -121,7 +148,7 @@ def make_random_data(db):
     # generate random users
     N_DISTRICTS = 1
     N_USERS = 10
-    BOOK_NAMES = ['Kerry', 'Bible', 'Tom Sawer', 'Alice in Wonderland',
+    BOOK_NAMES = ['Kerry', 'Bible', 'Bible 2', 'Tom Sawer',
                 'Jungle book', 'Cinderella', 'Birdwatcher', 'Matrix',
                 'Forest Gump', 'Breakfast for champions']
     N_BOOKS = len(BOOK_NAMES) * 4
@@ -162,6 +189,9 @@ def make_random_data(db):
     print(f'Total all_book_inst_ids = {len(all_book_inst_ids)}')
 
 if __name__ == '__main__':
+    app.secret_key = 'super secret key'
+    app.config['SESSION_TYPE'] = 'filesystem'
+
     if len(sys.argv) > 1:
         if sys.argv[1] == 'mkdb':
             db.create_all()
