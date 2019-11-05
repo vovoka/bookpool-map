@@ -9,8 +9,8 @@ function makeMap() {
 
 var layer = L.layerGroup();
 
-function renderData(districtid) {
-    $.getJSON("/district/" + districtid, function(obj) {
+function renderData() {
+    $.getJSON("/district/", function(obj) {
         var markers = obj.data.map(
             function(arr) {
                 console.log(arr)

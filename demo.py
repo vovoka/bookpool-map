@@ -105,8 +105,6 @@ def index():
     districts = District.query.all()
     search = BookSearchForm(request.form)
 
-    if results:
-        pass
     if request.method == 'POST':
         return search_results(search)
     return render_template('index.html', districts=districts, form=search)
@@ -134,14 +132,14 @@ def search_results(search):
         return render_template('index.html', results=results, form=search)
 
 
-@app.route('/district/<int:district_id>')
-def district(district_id):
-    users = User.query.filter_by(district_id=district_id).all()
+@app.route('/district/')
+def district():
+    users = User.query.all()
 
     # create list of ghf users books (for fun)
     for user in users:
         booklist = []
-        users = User.query.filter_by(district_id=district_id).all()
+        users = User.query.all()
     coords = [[user.latitude, user.longitude, str(user.get_titles())] for user in users]
     print('_' * 80)
     return jsonify({"data": coords})
@@ -149,7 +147,7 @@ def district(district_id):
 
 def make_random_data(db):
     # generate random users
-    N_DISTRICTS = 1
+    N_DISTRICTS = 4
     N_USERS = 10
     BOOK_NAMES = ['Kerry', 'Bible', 'Bible 2', 'Tom Sawer',
                 'Jungle book', 'Cinderella', 'Birdwatcher', 'Matrix',
