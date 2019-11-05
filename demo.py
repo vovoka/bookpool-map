@@ -104,6 +104,9 @@ def get_book_title_by_id(book_id):
 def index():
     districts = District.query.all()
     search = BookSearchForm(request.form)
+
+    if results:
+        pass
     if request.method == 'POST':
         return search_results(search)
     return render_template('index.html', districts=districts, form=search)
@@ -128,7 +131,7 @@ def search_results(search):
     for b in results:
         print(b)
 
-        return render_template('results.html', results=results)
+        return render_template('index.html', results=results, form=search)
 
 
 @app.route('/district/<int:district_id>')
